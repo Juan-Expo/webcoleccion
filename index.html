@@ -170,36 +170,12 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem
 </div>
 
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTTKKzuvF9JYCciM_gOeScQcq4NtHrt0M1EmvHKDbbAlYANQrTV6KbRxvAjlOpUr-sGT_SPZ6DPmDae/pub?gid=1974307614&single=true&output=csv';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzN7__wTPpKNdjSgSQ5E7y4FKyL3IqbNOkFBkQrTmecobG957t8YUW7a-bNYaJVm6Z9Og/exec';
 
 let CARS = [];
 let fCat = 'all', fScale = 'all';
 
-// ── CSV PARSE ─────────────────────────────────────────────────────────────
-function parseCSV(text) {
-  const rows = [], re = /("(?:[^"]|"")*"|[^,\n]*)/g;
-  const lines = text.split('\n');
-  const headers = parseLine(lines[0]);
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const vals = parseLine(lines[i]);
-    const obj = {};
-    headers.forEach((h, j) => { obj[h.trim()] = (vals[j] || '').trim(); });
-    rows.push(obj);
-  }
-  return rows;
-}
-function parseLine(line) {
-  const res = []; let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-    else if (c === ',' && !inQ) { res.push(cur); cur = ''; }
-    else cur += c;
-  }
-  res.push(cur);
-  return res;
-}
+
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 const catMap = { 'Formula 1':'F1', 'Le Mans':'Le Mans', 'Rally':'Rally', 'Motos':'Moto', 'Calle':'Calle' };
@@ -374,13 +350,9 @@ function setS(s, el) {
 // ── INIT: fetch CSV ───────────────────────────────────────────────────────
 async function init() {
   try {
-    // CORS workaround via allorigins
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(CSV_URL)}`;
-    const res = await fetch(proxy);
-    const json = await res.json();
-    const rows = parseCSV(json.contents);
-    // Filtrar filas vacías y las que no tienen Categoria (son filas de stats del sheet)
-    CARS = rows.filter(r => r['Categoria'] && ['Formula 1','Le Mans','Rally','Motos','Calle'].includes(r['Categoria']));
+    const res = await fetch(API_URL);
+    const rows = await res.json();
+    CARS = rows;
     renderHome();
   } catch(e) {
     document.getElementById('feat-grid').innerHTML = `<div class="empty">Error al cargar los datos. Recargá la página.</div>`;
