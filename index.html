@@ -71,8 +71,13 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem
 .moverlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;backdrop-filter:blur(3px)}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:15px;width:100%;max-width:520px;margin:auto}
 .mimg{width:100%;height:210px;background:var(--bg3);display:flex;align-items:center;justify-content:center;border-radius:15px 15px 0 0;border-bottom:1px solid var(--border);position:relative;font-size:68px;overflow:hidden}
-.mimg img{width:100%;height:100%;object-fit:contain;padding:14px}
-.mclose{position:absolute;top:9px;right:9px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.mimg img{width:100%;height:100%;object-fit:contain;padding:14px;cursor:zoom-in;transition:transform .2s}
+.mclose{position:absolute;top:9px;right:9px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;z-index:10}
+/* LIGHTBOX */
+.lbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.lbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:6px;box-shadow:0 0 60px rgba(0,0,0,.8)}
+.lbox-close{position:absolute;top:16px;right:16px;background:var(--bg4);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;z-index:10}
+.lbox-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--text3);letter-spacing:.05em}
 .mbody{padding:1.1rem 1.3rem}
 .mtitle{font-size:18px;font-weight:700;margin-bottom:2px}
 .msub{font-size:13px;color:var(--text2);margin-bottom:1rem}
@@ -293,7 +298,7 @@ function openMod(i) {
   const car = CARS[i];
   const src = driveImg(car.Drive_id);
   const imgHtml = src
-    ? `<img src="${src}" alt="${car.Modelo}" onerror="this.style.display='none';this.nextSibling.style.display='block'"><span style="display:none;font-size:68px">${catEmoji(car.Categoria)}</span>`
+    ? `<img src="${src}" alt="${car.Modelo}" onclick="openLbox(this.src)" onerror="this.style.display='none';this.nextSibling.style.display='block'"><span style="display:none;font-size:68px">${catEmoji(car.Categoria)}</span>`
     : `<span style="font-size:68px">${catEmoji(car.Categoria)}</span>`;
 
   const cat = car['Categoria']||'';
@@ -321,7 +326,19 @@ function openMod(i) {
 function closeMod(e) {
   if (!e || e.target === document.getElementById('modal')) document.getElementById('modal').style.display = 'none';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMod(); });
+function openLbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'lbox';
+  lb.innerHTML = `<button class="lbox-close" onclick="this.parentNode.remove()">✕</button><img src="${src.replace('sz=w400','sz=w1200')}" alt=""><div class="lbox-hint">ESC o clic para cerrar</div>`;
+  lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+  document.body.appendChild(lb);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelector('.lbox')?.remove();
+    closeMod();
+  }
+});
 
 // ── NAV / FILTERS ─────────────────────────────────────────────────────────
 function goTo(p) {
